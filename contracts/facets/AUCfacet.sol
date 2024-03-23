@@ -2,6 +2,7 @@
 pragma solidity ^0.8.9;
 import {LibAppStorage} from "../libraries/LibAppStorage.sol";
 import {LibEvents} from "../libraries/LibEvents.sol";
+import{LibPercentageCal} from "../libraries/LibPercentageCal.sol";
 
 contract AUCFacet {
     LibAppStorage.Layout internal _appStorage;
@@ -27,8 +28,8 @@ contract AUCFacet {
     }
 
     function transfer(address _to, uint256 _value) public returns (bool success) {
-        LibAppStorage._transferFrom(msg.sender, _to, _value);
-        LibAppStorage._updateLastInterator(msg.sender);
+        LibPercentageCal._transferFrom(msg.sender, _to, _value);
+        LibPercentageCal._updateLastInterator(msg.sender);
 
         success = true;
     }
@@ -38,13 +39,13 @@ contract AUCFacet {
         address _to,
         uint256 _value
     ) public returns (bool success) {
-        uint256 l_allowance = l.allowances[_from][msg.sender];
-        if (msg.sender == _from || l.allowances[_from][msg.sender] >= _value) {
-            l.allowances[_from][msg.sender] = l_allowance - _value;
-            LibAppStorage._transferFrom(_from, _to, _value);
-            LibAppStorage._updateLastInterator(msg.sender);
+        uint256 _myAllowance = _appStorage.allowances[_from][msg.sender];
+        if (msg.sender == _from || _appStorage.allowances[_from][msg.sender] >= _value) {
+            _appStorage.allowances[_from][msg.sender] = _myAllowance - _value;
+            LibPercentageCal._transferFrom(_from, _to, _value);
+            LibPercentageCal._updateLastInterator(msg.sender);
 
-            emit LibEvents.Approval(_from, msg.sender, l_allowance - _value);
+            emit LibEvents.Approval(_from, msg.sender, _myAllowance - _value);
 
             success = true;
         } else {
@@ -53,7 +54,7 @@ contract AUCFacet {
     }
 
     function approve(address _spender,uint256 _value) public returns (bool success) {
-        l.allowances[msg.sender][_spender] = _value;
+        _appStorage.allowances[msg.sender][_spender] = _value;
         emit LibEvents.Approval(msg.sender, _spender, _value);
         success = true;
     }
@@ -62,15 +63,15 @@ contract AUCFacet {
         address _owner,
         address _spender
     ) public view returns (uint256 remaining_) {
-        remaining_ = l.allowances[_owner][_spender];
+        remaining_ = _appStorage.allowances[_owner][_spender];
     }
 
     function mintTo(address _user) external {
-        LibDiamond.enforceIsContractOwner();
+        // LibDiamond.enforceIsContractOwner();
         uint256 amount = 100_000_000e18;
-        l.balances[_user] += amount;
-        l.totalSupply += uint96(amount);
-        LibAppStorage._updateLastInterator(msg.sender);
+        _appStorage.balances[_user] += amount;
+        _appStorage.totalSupply += uint96(amount);
+        LibPercentageCal._updateLastInterator(msg.sender);
 
         emit LibEvents.Transfer(address(0), _user, amount);
     }

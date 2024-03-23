@@ -3,25 +3,21 @@ pragma solidity ^0.8.9;
 
 library LibError{
 
-    error ADDRESS_ZERO_NOT_ALLOWED();
-    error ONLY_OWNER();
- 
+    // error ADDRESS_ZERO_NOT_ALLOWED();
+    // error ONLY_OWNER();
 
-    error WINNERS_ARE_NOT_SELECTED_YET();
+
+    error NOT_NFT_OWNER();
+    error NOT_APPROVED();
+    error ALREADY_HIGHEST_BIDDER();
+    error AMOUNT_MUST_BE_HIGHER();
     error INSUFFICIENT_FUNDS();
-    error COULD_NOT_BE_CLAIMED__TRY_AGAIN_LATER();
-    error ONLY_OWNER_IS_ALLOWED();
-    error WINNERS_ALREADY_SELECTED();
-    error YOU_ARE_NOT_THE_OWNER_OF_THE_NFT();
-    error NOT_APPROVED_FOR_TRANSFER_TO_AUCTION_CONTRACT();
-    error AUCTION_HAS_ENDED();
-    error BID_AMOUNT_MUST_BE_HIGHER_THAN_CURRENT_BID();
-    error YOU_HAVE_ALREADY_PLACED_HIGHEST_BID();
-    error SENT_AMOUNT_NOT_MATCH_BID_AMOUNT();
     error AUCTION_HAS_NOT_ENDED();
-    error ONLY_THE_OWNER_OR_AUCTION_CREATOR_CAN_END_AUCTION();
-    error BID_AMOUNT_DID_NOT_PASS_SET_POOL();
-    error YOU_CANNOT_REWARD_BID_AS_THE_HIGHEST_BIDDER();
-    error YOU_HAVENT_PLACE_BID_ON_THIS_NFT();
+    error AUCTION_HAS_ENDED();
+    error ADDRESS_ZERO();
+    error NO_BID_ON_NFT();
+    error Not_Authorized();
+    // error ALREADY_HIGHEST_BIDDER();
+
 
 }
