@@ -48,6 +48,9 @@ contract AuctionFacet {
         emit LibEvents.NFTSubmittedForAuction(msg.sender, _tokenId, _amount);
 }
 
+    function getAuctionedNfts(uint _id) external returns (LibAppStorage.NFTs memory ){
+       return _appStorage.userNfts[_id];
+    }
 
     function bidNFTAuction(uint _nftId, uint _amountBid) external {
         uint _nftValue = _amountBid;
@@ -143,6 +146,8 @@ contract AuctionFacet {
         // Emit an event to notify external applications
         emit LibEvents.BidRedrawn(_nftId, msg.sender, userBidAmount);
 }
+
+    
 
     function addressZeroCheck(address _caller) internal pure {
         if(_caller == address(0)) revert LibError.ADDRESS_ZERO();

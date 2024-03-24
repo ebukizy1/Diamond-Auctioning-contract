@@ -11,9 +11,11 @@ import "../contracts/Diamond.sol";
 import "../contracts/EmaxNfts.sol";
 import "../contracts/facets/AUCFacet.sol";
 import "../contracts/facets/AuctionFacet.sol";
+import {LibAppStorage} from "../contracts/libraries/LibAppStorage.sol";
 // import {LibError} from "../contracts/libraries/LibError.sol";
 
 contract DiamondDeployer is Test, IDiamondCut {
+    LibAppStorage.Layout l;
     //contract types of facets to be deployed
     Diamond diamond;
     DiamondCutFacet dCutFacet;
@@ -134,14 +136,31 @@ contract DiamondDeployer is Test, IDiamondCut {
         emaxNft.mint();
         vm.expectRevert("NOT_APPROVED");
         auctionFacets.submitNFTForAuction(address(emaxNft), 1, 5000, 2 days);
+
     }
 
     function testOwnerCanSubmit_NftAndGiveApproval() public{
         switchSigner(A);
         emaxNft.mint();
         emaxNft.approve(address(diamond), 1);
+
         auctionFacets.submitNFTForAuction(address(emaxNft), 1, 5000, 2 days);
+        LibAppStorage.NFTs memory _newNft = auctionFacets.getAuctionedNfts(1);   
+        assertEq(_newNft.amount, 5000);
+        assertEq(_newNft.nftTokenId, 1);
+        assertEq(_newNft.dueTime, 2 days);
+
     }
+
+    function 
+
+    // function test
+    // userNfts;
+
+
+    
+
+    
 
     function generateSelectors(
         string memory _facetName
