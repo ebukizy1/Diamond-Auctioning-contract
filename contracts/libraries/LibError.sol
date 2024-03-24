@@ -5,6 +5,7 @@ library LibError{
 
     // error ADDRESS_ZERO_NOT_ALLOWED();
     // error ONLY_OWNER();
+    // error ADDRESS_ZERO();
 
 
     error NOT_NFT_OWNER();

@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-// import "./IERC721.sol";
+// import "./INFT721
+
 // import "./Err.sol";
 // import "./IEnglishAuction.sol";
 
@@ -10,8 +11,8 @@ import {LibAppStorage} from "../libraries/LibAppStorage.sol";
 import {LibEvents} from "../libraries/LibEvents.sol";
 import {LibError} from "../libraries/LibError.sol";
 import {LibPercentageCal} from "../libraries/LibPercentageCal.sol";
-import "../interfaces/IERC721.sol";
-import {IERC165} from "../interfaces/IERC165.sol";
+import "../interfaces/INFT721.sol";
+// import {IERC165} from "../interfaces/IERC165.sol";
 contract AuctionFacet {
     LibAppStorage.Layout internal _appStorage;
 
@@ -19,15 +20,18 @@ contract AuctionFacet {
 
     function submitNFTForAuction(address _nftContract, uint256 _tokenId, uint256 _amount, uint _dueTime) external {
         addressZeroCheck(msg.sender); 
-        require(verifyNFT(_nftContract));
-        if(IERC721(_nftContract).ownerOf(_tokenId) != msg.sender)
+        // require(verifyNFT(_nftContract));
+        if(INFT721
+        (_nftContract).ownerOf(_tokenId) != msg.sender)
          revert LibError.NOT_NFT_OWNER();
         
-        if(IERC721(_nftContract).getApproved(_tokenId) != address(this))
+        if(INFT721
+        (_nftContract).getApproved(_tokenId) != address(this))
          revert LibError.NOT_APPROVED();  
         uint newNftId = _appStorage.nftId + 1;
         // Transfer the NFT ownership to the auction contract first
-        IERC721(_nftContract).safeTransferFrom(msg.sender, address(this), _tokenId);
+        INFT721
+        (_nftContract).safeTransferFrom(msg.sender, address(this), _tokenId);
 
         LibAppStorage.NFTs storage _newNFT = _appStorage.userNfts[newNftId];
         _newNFT.owner = msg.sender;
@@ -104,7 +108,8 @@ contract AuctionFacet {
         uint _amount = _foundNft.amountBid;
         _appStorage.userAmountBid[_foundNft.higestBidder] = 0;
         // Transfer NFT to the highest bidder using the safe transfer pattern
-        IERC721(_foundNft.nftContract).safeTransferFrom(address(this), _foundNft.higestBidder, _foundNft.nftTokenId);
+        INFT721
+        (_foundNft.nftContract).safeTransferFrom(address(this), _foundNft.higestBidder, _foundNft.nftTokenId);
       
         // Transfer funds to the auction creator (NFT owner)
         LibPercentageCal._transferFrom(address(this), _foundNft.owner, _amount);
@@ -179,29 +184,29 @@ contract AuctionFacet {
          LibPercentageCal._transferFrom(address(this), LibPercentageCal.BURNT_ADDRESS, _amount);
        }
 
-    function verifyNFT(
-        address nftContract
-    ) internal view returns (bool isCompactible) {
-        // Check ERC721 compatibility
-        bytes4 erc721InterfaceId = 0x80ac58cd; // ERC721 interface ID
-        bool isERC721 = IERC165(nftContract).supportsInterface(
-            erc721InterfaceId
-        );
+    // function verifyNFT(
+    //     address nftContract
+    // ) internal view returns (bool isCompactible) {
+    //     // Check ERC721 compatibility
+    //     bytes4 erc721InterfaceId = 0x80ac58cd; // ERC721 interface ID
+    //     bool isERC721 = IERC165(nftContract).supportsInterface(
+    //         erc721InterfaceId
+    //     );
 
-        // Check ERC1155 compatibility
-        bytes4 erc1155InterfaceId = 0xd9b67a26; // ERC1155 interface ID
-        bool isERC1155 = IERC165(nftContract).supportsInterface(
-            erc1155InterfaceId
-        );
+    //     // Check ERC1155 compatibility
+    //     bytes4 erc1155InterfaceId = 0xd9b67a26; // ERC1155 interface ID
+    //     bool isERC1155 = IERC165(nftContract).supportsInterface(
+    //         erc1155InterfaceId
+    //     );
 
-        // Either ERC721 or ERC1155 should be supported, but not both
-        require(
-            isERC721 || isERC1155,
-            "NFT is neither ERC721 nor ERC1155 compatible"
-        );
+    //     // Either ERC721 or ERC1155 should be supported, but not both
+    //     require(
+    //         isERC721 || isERC1155,
+    //         "NFT is neither ERC721 nor ERC1155 compatible"
+    //     );
 
-        isCompactible = true;
-    }
+    //     isCompactible = true;
+    // }
 }
 
     
