@@ -11,7 +11,7 @@ import {LibAppStorage} from "../libraries/LibAppStorage.sol";
 import {LibEvents} from "../libraries/LibEvents.sol";
 import {LibError} from "../libraries/LibError.sol";
 import {LibPercentageCal} from "../libraries/LibPercentageCal.sol";
-import "../interfaces/INFT721.sol";
+import "../interfaces/INFT.sol";
 import {IIERC165} from "../interfaces/IERC165.sol";
 contract AuctionFacet {
     LibAppStorage.Layout internal _appStorage;
@@ -20,19 +20,17 @@ contract AuctionFacet {
 
     function submitNFTForAuction(address _nftContract, uint256 _tokenId, uint256 _amount, uint _dueTime) external {
         require(_nftContract != address(0) , "AddressZero");
-        addressZeroCheck(_nftContract); 
+        addressZeroCheck(_nftContract);
+
         require(verifyNFT(_nftContract));
-        if(INFT721
-        (_nftContract).ownerOf(_tokenId) != msg.sender)
-         revert ("NOT_NFT_OWNER");
+        if(INFT(_nftContract).ownerOf(_tokenId) != msg.sender) revert ("NOT_NFT_OWNER");
         
-        // if(INFT721
-        // (_nftContract).getApproved(_tokenId) != address(this))
-        //  revert (NOT_APPROVED());  
+        if(INFT(_nftContract).getApproved(_tokenId) != address(this))revert ("NOT_APPROVED"); 
+
         uint newNftId = _appStorage.nftId + 1;
         // Transfer the NFT ownership to the auction contract first
-        INFT721
-        (_nftContract).safeTransferFrom(msg.sender, address(this), _tokenId);
+        INFT
+        (_nftContract).transferFrom(msg.sender, address(this), _tokenId);
 
         LibAppStorage.NFTs storage _newNFT = _appStorage.userNfts[newNftId];
         _newNFT.owner = msg.sender;
@@ -109,7 +107,7 @@ contract AuctionFacet {
         uint _amount = _foundNft.amountBid;
         _appStorage.userAmountBid[_foundNft.higestBidder] = 0;
         // Transfer NFT to the highest bidder using the safe transfer pattern
-        INFT721
+        INFT
         (_foundNft.nftContract).safeTransferFrom(address(this), _foundNft.higestBidder, _foundNft.nftTokenId);
       
         // Transfer funds to the auction creator (NFT owner)

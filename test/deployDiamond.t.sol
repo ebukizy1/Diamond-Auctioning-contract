@@ -129,6 +129,20 @@ contract DiamondDeployer is Test, IDiamondCut {
         auctionFacets.submitNFTForAuction(address(emaxNft), 1, 5000, 2 days);
     }
 
+    function testRevertIfNotGivenApproval() public {
+        switchSigner(A);
+        emaxNft.mint();
+        vm.expectRevert("NOT_APPROVED");
+        auctionFacets.submitNFTForAuction(address(emaxNft), 1, 5000, 2 days);
+    }
+
+    function testOwnerCanSubmit_NftAndGiveApproval() public{
+        switchSigner(A);
+        emaxNft.mint();
+        emaxNft.approve(address(diamond), 1);
+        auctionFacets.submitNFTForAuction(address(emaxNft), 1, 5000, 2 days);
+    }
+
     function generateSelectors(
         string memory _facetName
     ) internal returns (bytes4[] memory selectors) {
