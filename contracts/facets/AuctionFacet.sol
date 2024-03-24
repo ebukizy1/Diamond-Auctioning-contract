@@ -12,22 +12,23 @@ import {LibEvents} from "../libraries/LibEvents.sol";
 import {LibError} from "../libraries/LibError.sol";
 import {LibPercentageCal} from "../libraries/LibPercentageCal.sol";
 import "../interfaces/INFT721.sol";
-// import {IERC165} from "../interfaces/IERC165.sol";
+import {IIERC165} from "../interfaces/IERC165.sol";
 contract AuctionFacet {
     LibAppStorage.Layout internal _appStorage;
 
 
 
     function submitNFTForAuction(address _nftContract, uint256 _tokenId, uint256 _amount, uint _dueTime) external {
-        addressZeroCheck(msg.sender); 
-        // require(verifyNFT(_nftContract));
+        require(_nftContract != address(0) , "AddressZero");
+        addressZeroCheck(_nftContract); 
+        require(verifyNFT(_nftContract));
         if(INFT721
         (_nftContract).ownerOf(_tokenId) != msg.sender)
-         revert LibError.NOT_NFT_OWNER();
+         revert ("NOT_NFT_OWNER");
         
-        if(INFT721
-        (_nftContract).getApproved(_tokenId) != address(this))
-         revert LibError.NOT_APPROVED();  
+        // if(INFT721
+        // (_nftContract).getApproved(_tokenId) != address(this))
+        //  revert (NOT_APPROVED());  
         uint newNftId = _appStorage.nftId + 1;
         // Transfer the NFT ownership to the auction contract first
         INFT721
@@ -145,7 +146,7 @@ contract AuctionFacet {
         emit LibEvents.BidRedrawn(_nftId, msg.sender, userBidAmount);
 }
 
-    function addressZeroCheck(address _caller) private pure {
+    function addressZeroCheck(address _caller) internal pure {
         if(_caller == address(0)) revert LibError.ADDRESS_ZERO();
     }
 
@@ -184,29 +185,29 @@ contract AuctionFacet {
          LibPercentageCal._transferFrom(address(this), LibPercentageCal.BURNT_ADDRESS, _amount);
        }
 
-    // function verifyNFT(
-    //     address nftContract
-    // ) internal view returns (bool isCompactible) {
-    //     // Check ERC721 compatibility
-    //     bytes4 erc721InterfaceId = 0x80ac58cd; // ERC721 interface ID
-    //     bool isERC721 = IERC165(nftContract).supportsInterface(
-    //         erc721InterfaceId
-    //     );
+    function verifyNFT(
+        address nftContract
+    ) internal view returns (bool isCompactible) {
+        // Check ERC721 compatibility
+        bytes4 erc721InterfaceId = 0x80ac58cd; // ERC721 interface ID
+        bool isERC721 = IIERC165(nftContract).supportsInterface(
+            erc721InterfaceId
+        );
 
-    //     // Check ERC1155 compatibility
-    //     bytes4 erc1155InterfaceId = 0xd9b67a26; // ERC1155 interface ID
-    //     bool isERC1155 = IERC165(nftContract).supportsInterface(
-    //         erc1155InterfaceId
-    //     );
+        // Check ERC1155 compatibility
+        bytes4 erc1155InterfaceId = 0xd9b67a26; // ERC1155 interface ID
+        bool isERC1155 = IIERC165(nftContract).supportsInterface(
+            erc1155InterfaceId
+        );
 
-    //     // Either ERC721 or ERC1155 should be supported, but not both
-    //     require(
-    //         isERC721 || isERC1155,
-    //         "NFT is neither ERC721 nor ERC1155 compatible"
-    //     );
+        // Either ERC721 or ERC1155 should be supported, but not both
+        require(
+            isERC721 || isERC1155,
+            "NFT is neither ERC721 nor ERC1155 compatible"
+        );
 
-    //     isCompactible = true;
-    // }
+        isCompactible = true;
+    }
 }
 
     

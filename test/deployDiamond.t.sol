@@ -9,8 +9,9 @@ import "forge-std/Test.sol";
 import "../contracts/Diamond.sol";
 // import "../lib/openzeppelin-contracts/contracts/token/ERC721/ERC721.sol";
 import "../contracts/EmaxNfts.sol";
-import "../contracts/facets/AUCfacet.sol";
+import "../contracts/facets/AUCFacet.sol";
 import "../contracts/facets/AuctionFacet.sol";
+// import {LibError} from "../contracts/libraries/LibError.sol";
 
 contract DiamondDeployer is Test, IDiamondCut {
     //contract types of facets to be deployed
@@ -27,7 +28,14 @@ contract DiamondDeployer is Test, IDiamondCut {
     AuctionFacet auctionFacets;
     AUCFacet aucFacets;
 
-    function testDeployDiamond() public {
+
+
+
+        address A = address(0xa);
+        address B = address(0xb);
+        address C = address(0xc);
+
+    function setUp() public {
         //deploy facets
         dCutFacet = new DiamondCutFacet();
         diamond = new Diamond(address(this), address(dCutFacet));
@@ -38,13 +46,7 @@ contract DiamondDeployer is Test, IDiamondCut {
         auctionFacet = new AuctionFacet();
 
     
-    
 
- 
-
-        address A = address(0xa);
-        address B = address(0xb);
-        address C = address(0xc);
 
         //upgrade diamond with facets
 
@@ -111,9 +113,22 @@ contract DiamondDeployer is Test, IDiamondCut {
 
 
     function testRevertIfTokenAddressIsZero() public {
-        vm.expectRevert("ADDRESS_ZERO");
-    auctionFacets.submitNFTForAuction(address(0), 1, 5000, 2 days);
+     
+          	vm.expectRevert("AddressZero");
+        // vm.expectRevert(abi.encodeWithSelector(ADDRESS_ZERO.selector));
+
+        auctionFacets.submitNFTForAuction(address(0), 1, 5000, 2 days);
+     
     }
+
+    function test_Revert_IfNot_TokenOwner() public {
+        switchSigner(A);
+        emaxNft.mint();
+        switchSigner(B);
+        vm.expectRevert("NOT_NFT_OWNER");
+        auctionFacets.submitNFTForAuction(address(emaxNft), 1, 5000, 2 days);
+    }
+
     function generateSelectors(
         string memory _facetName
     ) internal returns (bytes4[] memory selectors) {
