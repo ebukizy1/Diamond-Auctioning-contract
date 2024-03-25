@@ -16,7 +16,7 @@ import {LibError} from "../contracts/libraries/LibError.sol";
 // import {LibError} from "../contracts/libraries/LibError.sol";
 
 contract DiamondDeployer is Test, IDiamondCut {
-    LibAppStorage.Layout l;
+    LibAppStorage.Layout internal l;
     //contract types of facets to be deployed
     Diamond diamond;
     DiamondCutFacet dCutFacet;
@@ -160,6 +160,7 @@ contract DiamondDeployer is Test, IDiamondCut {
         assertEq(amount, 6000);
     }  
 
+
     function testTwoPeopleCanBid() public {
         testBidForNftsAuction();
         switchSigner(B);
@@ -169,6 +170,7 @@ contract DiamondDeployer is Test, IDiamondCut {
     }
 
     function testCheckOutBidderAmount() public {
+        //deposited 5000 
         testTwoPeopleCanBid();
         //check bid after he has been out bid
         switchSigner(A);
@@ -177,8 +179,63 @@ contract DiamondDeployer is Test, IDiamondCut {
 
     }
 
-    function
+    function testCheckTeamBalance_AfterSomeHasBeenOutBid() public{
+                testTwoPeopleCanBid();
+        switchSigner(0x64eC750043715134D07d6e39E6593D2F33FF2579);
+        uint teamBalance = auctionFacets.checkTokenBal();
+        assertEq(teamBalance, 140);
+        
+    }
 
+    function testDAO_BalanceAfterSomeoneOutBid() public {
+              testTwoPeopleCanBid();
+
+        switchSigner(0x2c7536E3605D9C16a7a3D7b1898e529396a65c23);
+        uint doaBalance_ = auctionFacets.checkTokenBal();
+        assertEq(doaBalance_, 140);
+    }
+
+
+    function testBurn_BalanceAfterSomeoneOutBid() public {
+        testTwoPeopleCanBid();
+
+        switchSigner(0x0000000000000000000000000000000000000000);
+        uint burnBalance_ = auctionFacets.checkTokenBal();
+        assertEq(burnBalance_, 140);
+    }
+
+    // function testLastInteractorBalance() public{
+    //     testTwoPeopleCanBid();
+    //     switchSigner(l.lastInteractor);
+    //     uint lastInteractorBal = auctionFacets.checkTokenBal();
+    //     assertEq(lastInteractorBal, 70);
+
+    // }
+    function testHigestBidderCantBid() public {
+        testOwnerCanSubmit_NftAndGiveApproval();
+        auctionFacets.bidNFTAuction(1, 6000);
+        vm.expectRevert(abi.encodeWithSelector(LibError.ALREADY_HIGHEST_BIDDER.selector));
+        auctionFacets.bidNFTAuction(1, 6000);
+
+    }
+
+    function testBidderCantBidLower() public {
+        testOwnerCanSubmit_NftAndGiveApproval();
+        auctionFacets.bidNFTAuction(1, 6000);
+        vm.expectRevert(abi.encodeWithSelector(LibError.AMOUNT_MUST_BE_HIGHER.selector));
+        switchSigner(B);
+        auctionFacets.bidNFTAuction(1, 5000);
+ 
+    }
+
+    function testBidderMustHaveToken() public {
+        testOwnerCanSubmit_NftAndGiveApproval();
+        switchSigner(0x2c7536E3605D9C16a7a3D7b1898e529396a65c23);
+        vm.expectRevert(abi.encodeWithSelector(LibError.INSUFFICIENT_FUNDS.selector));
+        auctionFacets.bidNFTAuction(1, 7000);
+
+
+    }
 
     function generateSelectors(
         string memory _facetName

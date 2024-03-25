@@ -16,7 +16,12 @@ library LibPercentageCal {
         address constant DAO_ADDRESS = 0x2c7536E3605D9C16a7a3D7b1898e529396a65c23;
         address constant BURNT_ADDRESS = 0x0000000000000000000000000000000000000000;
 
-
+    // function testDAO_BalanceAfterSomeOutBid() public {
+    //     testTeamBalance_AfterSomeHasBeenOutBid();
+    //     switchSigner(0x2c7536E3605D9C16a7a3D7b1898e529396a65c23);
+    //     uint _doaBalance = aucFacets.checkTokenBal();
+    //     assertEq(_doaBalance, 140);
+    // }
 
   
 

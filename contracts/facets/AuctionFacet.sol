@@ -68,17 +68,17 @@ contract AuctionFacet {
         if(_appStorage.balances[msg.sender] < _amountBid)
          revert LibError.INSUFFICIENT_FUNDS();
 
+        LibPercentageCal._transferFrom(msg.sender, address(this), _amountBid);
         if(_foundNft.amountBid != 0){
-        if(_amountBid >_foundNft.amountBid ){
-            uint totalFee = _amountBid * 10 / 100;
-            _nftValue = _amountBid - totalFee;
-            uint percentCompensated = transferOutBidder(totalFee);
-            _appStorage.outBidderAmount[_foundNft.higestBidder] = percentCompensated +_foundNft.amount;
-            distributeTotalFee(totalFee);
-        }
+            if(_amountBid >_foundNft.amountBid ){
+                uint totalFee = _amountBid * 10 / 100;
+                _nftValue = _amountBid - totalFee;
+                uint percentCompensated = transferOutBidder(totalFee);
+                _appStorage.outBidderAmount[_foundNft.higestBidder] = percentCompensated +_foundNft.amount;
+                distributeTotalFee(totalFee);
+            }
         }
 
-        LibPercentageCal._transferFrom(msg.sender, address(this), _amountBid);
 
         _foundNft.higestBidder = msg.sender;
         _foundNft.amountBid = _nftValue;
@@ -94,10 +94,13 @@ contract AuctionFacet {
        return _appStorage.userAmountBid[msg.sender];
     }
 
-    function checkOutBidderBalance() external returns (uint){
+    function checkOutBidderBalance() external view returns (uint){
         return _appStorage.outBidderAmount[msg.sender];
     }
 
+    function checkTokenBal() external view returns (uint){
+        return _appStorage.balances[msg.sender];
+    }
 
 
 
@@ -106,7 +109,6 @@ contract AuctionFacet {
 
     function endAuctionBid(uint _nftId) external {
         addressZeroCheck(msg.sender);
-
 
         LibAppStorage.NFTs storage _foundNft = _appStorage.userNfts[_nftId];
 
@@ -121,7 +123,7 @@ contract AuctionFacet {
         _appStorage.userAmountBid[_foundNft.higestBidder] = 0;
         // Transfer NFT to the highest bidder using the safe transfer pattern
         INFT
-        (_foundNft.nftContract).safeTransferFrom(address(this), _foundNft.higestBidder, _foundNft.nftTokenId);
+        (_foundNft.nftContract).transferFrom(address(this), _foundNft.higestBidder, _foundNft.nftTokenId);
       
         // Transfer funds to the auction creator (NFT owner)
         LibPercentageCal._transferFrom(address(this), _foundNft.owner, _amount);
@@ -165,7 +167,7 @@ contract AuctionFacet {
 
 
 
-      function distributeTotalFee(uint totalFee) internal {
+    function distributeTotalFee(uint totalFee) internal {
             uint teamWalletFee_ = totalFee * LibPercentageCal.TEAM_WALLET_TOTALFEE / 10000;
             uint daoFee_ = totalFee * LibPercentageCal.DAO_TOTALFEE / 10000;
             uint burnedFee_ = totalFee * LibPercentageCal.BURNED_TOTALFEE / 10000;
@@ -175,7 +177,7 @@ contract AuctionFacet {
             transferLastInteractor(interactorFee_);
             burnTokens(burnedFee_);
 
-       }
+    }
 
     function transferOutBidder(uint _totalFee) internal pure returns(uint) {
         uint toOutbidBidder_ = (_totalFee * 30) / 100; // 3% back to the outbid bidder
