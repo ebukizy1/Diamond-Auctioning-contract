@@ -12,6 +12,7 @@ import "../contracts/EmaxNfts.sol";
 import "../contracts/facets/AUCFacet.sol";
 import "../contracts/facets/AuctionFacet.sol";
 import {LibAppStorage} from "../contracts/libraries/LibAppStorage.sol";
+import {LibError} from "../contracts/libraries/LibError.sol";
 // import {LibError} from "../contracts/libraries/LibError.sol";
 
 contract DiamondDeployer is Test, IDiamondCut {
@@ -116,7 +117,7 @@ contract DiamondDeployer is Test, IDiamondCut {
 
     function testRevertIfTokenAddressIsZero() public {
      
-          	vm.expectRevert("AddressZero");
+          	vm.expectRevert(abi.encodeWithSelector(LibError.ADDRESS_ZERO.selector));
         // vm.expectRevert(abi.encodeWithSelector(ADDRESS_ZERO.selector));
 
         auctionFacets.submitNFTForAuction(address(0), 1, 5000, 2 days);
@@ -127,14 +128,14 @@ contract DiamondDeployer is Test, IDiamondCut {
         switchSigner(A);
         emaxNft.mint();
         switchSigner(B);
-        vm.expectRevert("NOT_NFT_OWNER");
+        vm.expectRevert(abi.encodeWithSelector(LibError.NOT_NFT_OWNER.selector));
         auctionFacets.submitNFTForAuction(address(emaxNft), 1, 5000, 2 days);
     }
 
     function testRevertIfNotGivenApproval() public {
         switchSigner(A);
         emaxNft.mint();
-        vm.expectRevert("NOT_APPROVED");
+        vm.expectRevert(abi.encodeWithSelector(LibError.NOT_APPROVED.selector));
         auctionFacets.submitNFTForAuction(address(emaxNft), 1, 5000, 2 days);
 
     }
@@ -152,15 +153,32 @@ contract DiamondDeployer is Test, IDiamondCut {
 
     }
 
-    function 
+    function testBidForNftsAuction() public {
+        testOwnerCanSubmit_NftAndGiveApproval();
+        auctionFacets.bidNFTAuction(1, 6000);
+        uint amount = auctionFacets.checkBidAmount();
+        assertEq(amount, 6000);
+    }  
 
-    // function test
-    // userNfts;
+    function testTwoPeopleCanBid() public {
+        testBidForNftsAuction();
+        switchSigner(B);
+         auctionFacets.bidNFTAuction(1, 7000);
+        uint amount = auctionFacets.checkBidAmount();
+        assertEq(amount, 7000);
+    }
 
+    function testCheckOutBidderAmount() public {
+        testTwoPeopleCanBid();
+        //check bid after he has been out bid
+        switchSigner(A);
+     uint totalAmountAfterOutBidded_ =  auctionFacets.checkOutBidderBalance();
+     assertEq(totalAmountAfterOutBidded_, 5210);
 
-    
+    }
 
-    
+    function
+
 
     function generateSelectors(
         string memory _facetName

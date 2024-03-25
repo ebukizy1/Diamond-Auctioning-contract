@@ -19,13 +19,12 @@ contract AuctionFacet {
 
 
     function submitNFTForAuction(address _nftContract, uint256 _tokenId, uint256 _amount, uint _dueTime) external {
-        require(_nftContract != address(0) , "AddressZero");
         addressZeroCheck(_nftContract);
 
         require(verifyNFT(_nftContract));
-        if(INFT(_nftContract).ownerOf(_tokenId) != msg.sender) revert ("NOT_NFT_OWNER");
+        if(INFT(_nftContract).ownerOf(_tokenId) != msg.sender) revert LibError.NOT_NFT_OWNER();
         
-        if(INFT(_nftContract).getApproved(_tokenId) != address(this))revert ("NOT_APPROVED"); 
+        if(INFT(_nftContract).getApproved(_tokenId) != address(this))revert LibError.NOT_APPROVED(); 
 
         uint newNftId = _appStorage.nftId + 1;
         // Transfer the NFT ownership to the auction contract first
@@ -66,14 +65,17 @@ contract AuctionFacet {
         if(_amountBid < _foundNft.amountBid) 
             revert LibError.AMOUNT_MUST_BE_HIGHER();
 
-        if(_appStorage.balances[msg.sender] < _amountBid) revert LibError.INSUFFICIENT_FUNDS();
+        if(_appStorage.balances[msg.sender] < _amountBid)
+         revert LibError.INSUFFICIENT_FUNDS();
 
+        if(_foundNft.amountBid != 0){
         if(_amountBid >_foundNft.amountBid ){
-            uint totalFee = _foundNft.amountBid * 10 / 100;
-            _nftValue = _foundNft.amountBid - totalFee;
+            uint totalFee = _amountBid * 10 / 100;
+            _nftValue = _amountBid - totalFee;
             uint percentCompensated = transferOutBidder(totalFee);
             _appStorage.outBidderAmount[_foundNft.higestBidder] = percentCompensated +_foundNft.amount;
             distributeTotalFee(totalFee);
+        }
         }
 
         LibPercentageCal._transferFrom(msg.sender, address(this), _amountBid);
@@ -86,6 +88,14 @@ contract AuctionFacet {
         // Emit an event to notify external applications
         emit LibEvents.BidPlaced(_nftId, msg.sender, _amountBid);
 
+    }
+
+    function checkBidAmount()external view returns(uint) {
+       return _appStorage.userAmountBid[msg.sender];
+    }
+
+    function checkOutBidderBalance() external returns (uint){
+        return _appStorage.outBidderAmount[msg.sender];
     }
 
 
@@ -168,8 +178,8 @@ contract AuctionFacet {
        }
 
     function transferOutBidder(uint _totalFee) internal pure returns(uint) {
-            uint outBidFee_ = _totalFee *  LibPercentageCal.OUT_BID_TOTALFEE / 10000;
-            return outBidFee_;
+        uint toOutbidBidder_ = (_totalFee * 30) / 100; // 3% back to the outbid bidder
+            return toOutbidBidder_;
        }
 
     function transferTeamAddress(uint _amount) internal {
@@ -211,6 +221,8 @@ contract AuctionFacet {
 
         isCompactible = true;
     }
+
+
 }
 
     
