@@ -13,6 +13,7 @@ import "../contracts/facets/AUCFacet.sol";
 import "../contracts/facets/AuctionFacet.sol";
 import {LibAppStorage} from "../contracts/libraries/LibAppStorage.sol";
 import {LibError} from "../contracts/libraries/LibError.sol";
+import {INFT} from "../contracts/interfaces/INFT.sol";
 // import {LibError} from "../contracts/libraries/LibError.sol";
 
 contract DiamondDeployer is Test, IDiamondCut {
@@ -109,6 +110,7 @@ contract DiamondDeployer is Test, IDiamondCut {
         AUCFacet(address(diamond)).mintTo(B);
 
         auctionFacets = AuctionFacet(address(diamond));
+        aucFacets = AUCFacet(address(diamond));
 
     }
 
@@ -235,6 +237,18 @@ contract DiamondDeployer is Test, IDiamondCut {
         auctionFacets.bidNFTAuction(1, 7000);
 
 
+    }
+
+    function testAuctionHasEnded() public {
+        testTwoPeopleCanBid();
+        vm.warp(3 days);
+        switchSigner(A);
+        auctionFacets.endAuctionBid(1);
+        LibAppStorage.NFTs memory _newNft = auctionFacets.getAuctionedNfts(1); 
+        address ownerAddr = INFT(_newNft.nftContract).ownerOf(_newNft.nftTokenId);  
+        assertEq(ownerAddr, B);
+
+        
     }
 
     function generateSelectors(
